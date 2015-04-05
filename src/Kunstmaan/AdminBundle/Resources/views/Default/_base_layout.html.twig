@@ -22,6 +22,7 @@
     <link rel="apple-touch-icon" sizes="114x114" href="{{ asset('apple-touch-icon-114x114.png') }}">
 
     <!--=========== CSS ===========-->
+    {% block css %}
     <!--Combine-->
     {% stylesheets
         "@KunstmaanAdminBundle/Resources/public/scss/style.scss"
@@ -35,6 +36,8 @@
         <link rel="stylesheet" href="{{ asset_url }}" type="text/css"/>
     {% endstylesheets %}
     <![endif]-->
+    {% endblock %}
+    {% block color_brand_css %}
     <!--Customizable color brand-->
     <style type="text/css">
         {% if titlecolor is not defined or titlecolor is empty %}
@@ -51,10 +54,11 @@
             border-left-color: {{ titlebgcolor }};
         }
     </style>
+    {% endblock %}
     <!--Extra CSS-->
     {% block extracss %}{% endblock %}
 
-
+    {% block javascript_top %}
     <!--=========== JS ===========-->
     <!--Combined-->
     {% javascripts
@@ -64,6 +68,7 @@
     %}
     <script src="{{ asset_url }}"></script>
     {% endjavascripts %}
+    {% endblock %}
 
     {% include "KunstmaanAdminBundle:Default:_js_header.html.twig" %}
     {% include "KunstmaanAdminBundle:Default:_css_header.html.twig" %}
@@ -212,6 +217,7 @@
     {% endblock %}
 {% endblock %}
 
+    {% block javascript_bottom %}
     <!--=========== JS ===========-->
 
     <!--Uncombined-->
@@ -242,6 +248,7 @@
     %}
     <script src="{{ asset_url }}"></script>
     {% endjavascripts %}
+    {% endblock %}
 
     <!--Extra-->
     {% block extrajavascript %}{% endblock %}
