@@ -29,7 +29,7 @@
         "sensio/framework-extra-bundle": ">=2.3.0",
         "incenteev/composer-parameter-handler": "~2.0",
 
-        "friendsofsymfony/user-bundle": "2.0.*@dev",
+        "friendsofsymfony/user-bundle": "dev-master#808672b01f6aa6777417551c72a0be2c3545eafe",
         "knplabs/knp-menu-bundle": "~2.0",
         "guzzle/guzzle": "3.8.*",
         "white-october/pagerfanta-bundle": "1.0.*",
