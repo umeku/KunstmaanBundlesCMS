@@ -451,4 +451,16 @@ class NodeTranslation extends AbstractEntity
 
         return $this;
     }
+
+    /**
+     * @param string $str
+     * @return string
+     */
+    public function getTitleIndented($str = '-')
+    {
+        return sprintf("%s %s",
+            str_repeat($str, $this->getNode()->getLevel()),
+            $this->getTitle()
+        );
+    }
 }
