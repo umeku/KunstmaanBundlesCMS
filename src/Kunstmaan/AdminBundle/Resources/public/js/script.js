@@ -44,7 +44,16 @@ function init_tree() {
             "move": {
                 // Move only to current parent folder
                 "check_move": function(m){
-                    return m.op.is(m.np);
+                    var $parentNode = m.np,
+                        $thisNode = m.o,
+                        ref = $thisNode.data('ref'),
+                        cref = [];
+
+                    if ($parentNode.data('child-ref')) {
+                        cref = $parentNode.data('child-ref').split(' ');
+                    }
+
+                    return (ref.length > 0 && cref.indexOf(ref) >= 0);
                 }
             }
         },
@@ -116,12 +125,15 @@ function init_tree() {
             "show_only_matches" : true
         }
     }).bind("move_node.jstree", function(e, jstreeData){
-
             var $parentNode = jstreeData.args[0].np,
+                $thisNode = jstreeData.args[0].o,
                 url = $(this).data('reorder-url'),
                 params = {
                     nodes : []
                 };
+
+            params.node = $thisNode.attr("id").replace(/node-/,'');
+            params.parent = $parentNode.attr("id").replace(/node-/,'');
 
             $parentNode.find(" > ul > li").each(function(){
                 var id = $(this).attr("id").replace(/node-/,'');

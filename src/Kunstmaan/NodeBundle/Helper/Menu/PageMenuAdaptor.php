@@ -10,6 +10,7 @@ use Kunstmaan\AdminBundle\Helper\Menu\MenuBuilder;
 use Kunstmaan\AdminBundle\Helper\Menu\MenuItem;
 use Kunstmaan\AdminBundle\Helper\Menu\MenuAdaptorInterface;
 use Kunstmaan\AdminBundle\Helper\Menu\TopMenuItem;
+use Kunstmaan\NodeBundle\Entity\HasNodeInterface;
 use Kunstmaan\NodeBundle\Entity\HideFromNodeTreeInterface;
 use Kunstmaan\NodeBundle\Entity\Node;
 use Kunstmaan\NodeBundle\Helper\NodeMenuItem;
@@ -144,6 +145,39 @@ class PageMenuAdaptor implements MenuAdaptorInterface
         return $isHidden;
     }
 
+    private $childTypesCache = array();
+    /**
+     * Determine possible child types for this entity
+     *
+     * @param string $refEntityName
+     *
+     * @return bool
+     */
+    private function getPossibleChildTypes($refEntityName)
+    {
+        if (isset($this->childTypesCache[$refEntityName])) {
+            return $this->childTypesCache[$refEntityName];
+        }
+
+        $types = array();
+
+        if (class_exists($refEntityName)) {
+            $page = new $refEntityName();
+
+            if ($page instanceof HasNodeInterface) {
+                foreach ($page->getPossibleChildTypes() as $type) {
+                    $types[] = $this->getRefTypeHash($type['class']);
+                }
+            }
+        }
+
+        return $this->childTypesCache[$refEntityName] = $types;
+    }
+
+    private function getRefTypeHash($type) {
+        return sha1($type);
+    }
+
     /**
      * Get an array with the id's off all nodes in the tree that should be expanded.
      *
@@ -193,7 +227,11 @@ class PageMenuAdaptor implements MenuAdaptorInterface
                 ->setParent($parent)
                 ->setOffline(!$child['online'])
                 ->setRole('page')
-                ->setWeight($child['weight']);
+                ->setWeight($child['weight'])
+                ->addAttributes(array(
+                    'ref' => $this->getRefTypeHash($child['ref_entity_name']),
+                    'childref' => $this->getPossibleChildTypes($child['ref_entity_name']),
+                ));
 
             if (in_array($child['id'], $activeNodeIds)) {
                 $menuItem->setActive(true);
