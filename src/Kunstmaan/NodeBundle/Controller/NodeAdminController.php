@@ -35,6 +35,7 @@ use Kunstmaan\NodeBundle\Event\RevertNodeAction;
 use Kunstmaan\NodeBundle\Entity\HasNodeInterface;
 use Kunstmaan\AdminBundle\Helper\FormWidgets\Tabs\Tab;
 use Kunstmaan\AdminBundle\Helper\FormWidgets\Tabs\TabPane;
+use Kunstmaan\NodeBundle\Repository\NodeRepository;
 use Kunstmaan\NodeBundle\Repository\NodeVersionRepository;
 use Kunstmaan\NodeBundle\Event\CopyPageTranslationNodeEvent;
 use Kunstmaan\NodeBundle\Entity\NodeVersion;
@@ -439,12 +440,45 @@ class NodeAdminController extends Controller
     public function reorderAction(Request $request)
     {
         $this->init();
+
+        $nodeId = $request->get('node');
+        $parentId = $request->get('parent');
+
+        $conn = $this->em->getConnection();
+        /* @var NodeRepository $repo */
+        $repo = $this->em->getRepository('KunstmaanNodeBundle:Node');
+
+        /* @var Node $node */
+        $node = $repo->find($nodeId);
+        $nodeTranslation = $node->getNodeTranslation($this->locale, true);
+        $nodeVersion = $nodeTranslation->getPublicNodeVersion();
+        $page = $nodeVersion->getRef($this->em);
+
+        $this->checkPermission($node, PermissionMap::PERMISSION_EDIT);
+
+        /* @var Node $parent */
+        $parent = $repo->find($parentId);
+        $this->checkPermission($parent, PermissionMap::PERMISSION_EDIT);
+
+
+        $conn->beginTransaction();
+
+
+        $this->get('event_dispatcher')->dispatch(Events::PRE_PERSIST, new NodeEvent($node, $nodeTranslation, $nodeVersion, $page));
+
+        $repo->persistAsFirstChildOf($node, $parent);
+        $this->em->flush();
+
+        $this->get('event_dispatcher')->dispatch(Events::POST_PERSIST, new NodeEvent($node, $nodeTranslation, $nodeVersion, $page));
+
+
+
         $nodes = array();
         $nodeIds = $request->get('nodes');
 
         foreach($nodeIds as $id){
             /* @var Node $node */
-            $node = $this->em->getRepository('KunstmaanNodeBundle:Node')->find($id);
+            $node = $repo->find($id);
             $this->checkPermission($node, PermissionMap::PERMISSION_EDIT);
             $nodes[] = $node;
         }
@@ -467,6 +501,8 @@ class NodeAdminController extends Controller
 
             $weight++;
         }
+
+        $conn->commit();
 
         return new JsonResponse(array(
             'Success' => 'The node-translations for ['.$this->locale.'] have got new weight values'
