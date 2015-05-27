@@ -451,10 +451,13 @@ class NodeAdminController extends Controller
         /* @var Node $node */
         $node = $repo->find($nodeId);
         $nodeTranslation = $node->getNodeTranslation($this->locale, true);
-        $nodeVersion = $nodeTranslation->getPublicNodeVersion();
-        $page = $nodeVersion->getRef($this->em);
 
-        $this->checkPermission($node, PermissionMap::PERMISSION_EDIT);
+        if ($nodeTranslation) {
+            $nodeVersion = $nodeTranslation->getPublicNodeVersion();
+            $page = $nodeVersion->getRef($this->em);
+
+            $this->checkPermission($node, PermissionMap::PERMISSION_EDIT);
+        }
 
         /* @var Node $parent */
         $parent = $repo->find($parentId);
@@ -488,18 +491,20 @@ class NodeAdminController extends Controller
 
             /* @var NodeTranslation $nodeTranslation */
             $nodeTranslation = $node->getNodeTranslation($this->locale, true);
-            $nodeVersion = $nodeTranslation->getPublicNodeVersion();
-            $page = $nodeVersion->getRef($this->em);
+            if ($nodeTranslation) {
+                $nodeVersion = $nodeTranslation->getPublicNodeVersion();
+                $page = $nodeVersion->getRef($this->em);
 
-            $this->get('event_dispatcher')->dispatch(Events::PRE_PERSIST, new NodeEvent($node, $nodeTranslation, $nodeVersion, $page));
+                $this->get('event_dispatcher')->dispatch(Events::PRE_PERSIST, new NodeEvent($node, $nodeTranslation, $nodeVersion, $page));
 
-            $nodeTranslation->setWeight($weight);
-            $this->em->persist($nodeTranslation);
-            $this->em->flush($nodeTranslation);
+                $nodeTranslation->setWeight($weight);
+                $this->em->persist($nodeTranslation);
+                $this->em->flush($nodeTranslation);
 
-            $this->get('event_dispatcher')->dispatch(Events::POST_PERSIST, new NodeEvent($node, $nodeTranslation, $nodeVersion, $page));
+                $this->get('event_dispatcher')->dispatch(Events::POST_PERSIST, new NodeEvent($node, $nodeTranslation, $nodeVersion, $page));
 
-            $weight++;
+                $weight++;
+            }
         }
 
         $conn->commit();
